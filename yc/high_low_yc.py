@@ -34,8 +34,8 @@ data['RSI'] = talib.RSI(data['收盘'], timeperiod=14)  # 计算14日相对强�
 
 # 准备训练数据
 features = data[['SMA', 'EMA', 'RSI']][30:]  # 选择特征列
-# last_high=data['最高'][-1:]
-# last_low=data['最低'][-1:]
+# last_high=download['最高'][-1:]
+# last_low=download['最低'][-1:]
 
 targets = pd.concat([data[['最高', '最低']][31:],pd.DataFrame({'最高': data['最高'][-1:].values, '最低': data['最低'][-1:].values})])
 # num=len(targets)-1

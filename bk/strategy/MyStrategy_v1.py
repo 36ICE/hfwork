@@ -4,12 +4,7 @@ import backtrader as bt
 import pandas as pd
 import matplotlib.pyplot as plt  # 由于 Backtrader 的问题，此处要求 pip install matplotlib==3.2.2
 import pandas as pd
-import talib
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-import time
 
-import akshare as ak
 
 plt.rcParams["font.sans-serif"] = ["SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
@@ -116,99 +111,3 @@ class MyStrategy(bt.Strategy):
         回测结束后输出结果
         """
         self.log("(MA均线： %2d日) 期末总资金 %.2f" % (self.params.maperiod, self.broker.getvalue()), do_print=True)
-
-# 修改字段名与backtrader一致
-def change_column_name(data):
-
-    name_clomuns = data.columns.tolist()
-    new_name_dict = {}
-#日期,开盘,收盘,最高,最低,成交量,成交额,振幅,涨跌幅,涨跌额,换手率
-    for name in name_clomuns:
-
-        # if name == '日期':
-        #     new_name_dict[name] = 'datetime'
-        if name == '开盘':
-            new_name_dict[name] = 'open'
-        if name == '收盘':
-            new_name_dict[name] = 'close'
-        if name == '最高':
-            new_name_dict[name] = 'high'
-        if name == '最低':
-            new_name_dict[name] = 'low'
-        if name == '成交量':
-            new_name_dict[name] = 'volume'
-        if name == 'HTSCSecurityID':
-            new_name_dict[name] = 'sec_code'
-
-    data.rename(columns=new_name_dict, inplace=True)
-    return data
-def download_stock_day(code):
-    # 准备数据
-    print("正在下载" + str(code) + "日线数据")
-    try:
-        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily",start_date="20100101",end_date="20500101", adjust="")
-        stock_zh_a_hist_df.to_csv("./stock/day/" + str(code) + ".csv")
-    except:
-        print("下载异常" + str(code) + "....")
-        time.sleep(1)
-    else:
-        print("下载stock" + str(code) + "日线数据完成")
-        time.sleep(0.5)
-
-def download_etf_day(code):
-
-    # 准备数据
-    print("正在下载" + str(code) + "日线数据")
-    try:
-        #不复权  前复权qfq 后复权 hfq
-        fund_etf_hist_em_df = ak.fund_etf_hist_em(symbol=code, period="daily", start_date="20100101", end_date="20501201", adjust="")
-        fund_etf_hist_em_df.to_csv("./etf/day/" + str(code) + ".csv")
-    except:
-        print("下载异常" + str(code) + "....")
-        time.sleep(1)
-    else:
-        print("下载etf " + str(code) + "日线数据完成")
-        time.sleep(0.5)
-
-
-def main(code="512170",type='etf', start_cash=1000000, stake=100, commission_fee=0.001):
-    cerebro = bt.Cerebro()
-    # cerebro.optstrategy(MyStrategy, maperiod=range(3, 31))  # 导入策略参数寻优
-    cerebro.addstrategy(MyStrategy,maperiod=55,printlog=True)
-    # 读取数据
-    if type =='etf':
-        download_etf_day(code)
-        df = pd.read_csv(f'./etf/day/{code}.csv', index_col=0, parse_dates=True, encoding='utf-8')
-    else:
-        download_stock_day(code)
-        df = pd.read_csv(f'./stock/day/{code}.csv', index_col=0, parse_dates=True, encoding='utf-8')
-
-    new_df = change_column_name(df)
-    # new_df['datetime'] = pd.to_datetime(df['日期'])
-    # 把 date 作为日期索引，以符合 Backtrader 的要求
-    new_df.index = pd.to_datetime(df['日期'])
-    # new_df.set_index('datetime', inplace=True)
-    start_date = datetime(2021, 4, 3)  # 回测开始时间
-    end_date = datetime(2023, 12, 15)  # 回测结束时间
-    # 给cerebro添加数据
-    data = bt.feeds.PandasData(dataname=new_df, fromdate=start_date, todate=end_date)
-
-    cerebro.adddata(data)
-
-    # 设置初始化资金
-    cerebro.broker.setcash(start_cash)
-    cerebro.broker.setcommission(commission=commission_fee)  # 手续费
-    # cerebro.addsizer(bt.sizers.FixedSize, stake=stake)  # 设置买入数量
-    cerebro.run(maxcpus=1)  # 用单核 CPU 做优化
-    port_value = cerebro.broker.getvalue()  # 获取回测结束后的总资金
-    pnl = port_value - start_cash  # 盈亏统计
-
-    print(f"初始资金: {start_cash}\n回测期间：{start_date.strftime('%Y%m%d')}:{end_date.strftime('%Y%m%d')}")
-    print(f"总资金: {round(port_value, 2)}")
-    print(f"净收益: {round(pnl, 2)}")
-    cerebro.plot()
-
-
-
-if __name__ == '__main__':
-    main()
