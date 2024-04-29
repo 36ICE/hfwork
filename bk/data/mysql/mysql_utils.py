@@ -2,6 +2,8 @@ import pandas as pd
 import pymysql
 import logging
 
+from sqlalchemy import create_engine
+
 
 class MySQLToolbox:
     def __init__(self, host, username, password, port, database):
@@ -13,13 +15,16 @@ class MySQLToolbox:
         self.connection = None
 
     def connect(self):
-        self.connection = pymysql.connect(
-            host=self.host,
-            user=self.username,
-            password=self.password,
-            port=self.port,
-            database=self.database
-        )
+        # self.connection = pymysql.connect(
+        #     host=self.host,
+        #     user=self.username,
+        #     password=self.password,
+        #     port=self.port,
+        #     database=self.database
+        # )
+        #使用sqlalchemy
+        engine = create_engine(f'mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}?charset=utf8')
+        self.connection = engine.connect()
         logging.info("Connected to MySQL database")
 
     def disconnect(self):
