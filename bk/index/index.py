@@ -88,3 +88,10 @@ class MyStrategy(bt.Strategy):
             self.position_size *= 0.9
         elif self.rsi < 30:
             self.position_size *= 1.1
+# 创建自定义指标类
+class MyIndicator(bt.Indicator):
+    lines = ('my_indicator',)
+
+    def __init__(self):
+        # 初始化指标
+        self.lines.my_indicator = self.data - bt.indicators.SMA(self.data, period=20)
