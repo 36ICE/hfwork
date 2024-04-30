@@ -95,3 +95,4 @@ class MyIndicator(bt.Indicator):
     def __init__(self):
         # 初始化指标
         self.lines.my_indicator = self.data - bt.indicators.SMA(self.data, period=20)
+
