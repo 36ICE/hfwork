@@ -198,6 +198,8 @@ def stock_zh_a_day_hist():
     save_tosql(df, 'raw_a_day_hist')
 
 
+
 if __name__ == '__main__':
     stock_info_day()
-    stock_zh_a_day_hist()
+    # stock_zh_a_day_hist()
+    # stream_news_data()
